@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ja">
 <head>
 	<!-- CSS based on template of Dandelion wiki engine by Radomir Dopieralski who released this
 	template under the terms of GNU GPL. http://dandelion.sheep.art.pl/ -->
@@ -21,10 +21,12 @@
 		<li><a href="{CONTACT_URL}">Contact us</a></li>
 	</ul>
 </div>
+<div id="sidebar">
+	{BlogArticleList}
+</div>
 	<div id="content">
 		{<div class="error"> ERROR </div>}
 		{CONTENT}
-		{plugin:TAG_LIST}
 		{CONTENT_FORM}
 		<table style="width: 100%;">
 			<tr>
@@ -35,7 +37,7 @@
 				<td colspan="3">{CONTENT_TEXTAREA}</td>
 			</tr>
 			<tr>
-				<td colspan="2"> {FORM_PASSWORD}{  FORM_PASSWORD_INPUT}{  plugin:CAPTCHA_QUESTION}{  plugin:CAPTCHA_INPUT}{  EDIT_SUMMARY_TEXT}{  EDIT_SUMMARY_INPUT}{  CONTENT_SUBMIT}{  CONTENT_PREVIEW}</td>
+				<td colspan="2"> {FORM_PASSWORD}{  FORM_PASSWORD_INPUT}{  CONTENT_SUBMIT}{  CONTENT_PREVIEW}</td>
 				<td style="text-align: right; vertical-align: top;">{plugin:RESIZE_TEXTAREA}</td>
 			</tr>
 			<tr>
@@ -46,12 +48,13 @@
 	<div id="syntax_explain">{SYNTAX_EXPLAIN}</div>
 		{plugin:COMMENTS}
 	</div>
-	
 	<div id="footer">
 		<div style="float:left;">
 		 Powered by <a href="http://lionwiki.0o.cz/">LionWiki</a>
 		</div>
-		<div style="float:right;padding:7px;">{EDIT}</div>
+		<div style="float:right;padding:7px;">
+		{EditInfo}
+		</div>
 	</div>
 </div>
 </body>
