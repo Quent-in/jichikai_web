@@ -1,8 +1,8 @@
 <?php /* Configuration file for LionWiki. */
 $WIKI_TITLE = 'Saikyo High School Students Concil on the Web'; // name of the site
 
-$user="username";
-$pass="password";
+$user="jichikaiweb";
+$pass="schoolsaikyo";
 
 $TEMPLATE = 'jichikai_web.html'; // presentation template
 

@@ -67,7 +67,7 @@ class HatenaSyntax{
 		$match=$matches[0][0];
 		$n=strlen($match)+1;
 		$text=substr($l,$n-1,strlen($l)-1);
-		$this->currentlinehtml.="<h".$n.">".$text."</h".$n.">\n";
+		$this->currentlinehtml.="<h".$n.">".strip_tags($text)."</h".$n.">\n";
 	}
 	function inlineSyntaxes(){
 		$l=$this->currentline;

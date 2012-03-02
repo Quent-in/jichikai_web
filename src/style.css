@@ -1,16 +1,17 @@
 html{font:96% sans-serif;background:#f7f7f7;line-height:1.4}
 body{color:#333}
-#wrapper{margin:auto;width:60em;position:relative}
+#wrapper{margin:auto;width:60em;position:relative;}
 #header{padding:0px 0px 7px 0px}
 #content{
+	float:left;
 	background:white;
 	padding:1em;
 	border:1px solid #e0d78a;
 	outline:0.5em solid #fef4a4;
 	margin:0.5em auto;
 	padding:20px;
-	min-height:20em;
-	width:850px;
+	min-height:12em;
+	width:650px;
 	}
 #content *{outline: 0}
 h1{margin-top:0px;}
@@ -100,4 +101,17 @@ a.toolbarTextareaItem{padding-right: 10px}
 	color:#644e22;
 	overflow:auto;
 	outline:0.4em solid #eee;
+}
+#sidebar{
+	float:left;
+	margin-left:-30px;
+	padding:5px;
+	min-height:14em;
+	width:200px;
+	margin-right:20px;
+	border:solid 4px pink;
+	background-color:#f5deb3;
+}
+#footer{
+	clear:both;
 }

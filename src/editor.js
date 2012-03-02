@@ -16,6 +16,13 @@ function Show_Syntax(elm){
 }
 var editor={
 	result:"",
+	submit:function(form){
+		var text=$(form).children(".contentTextarea:first").value();
+		alert(text);
+		if(!text.match("/^\*/")){
+			return false;
+		}
+	},
 	link:function(){
 		var url=prompt("URLを貼りつけてください","");
 		if(!url){
@@ -23,6 +30,10 @@ var editor={
 		}
 		var title=prompt("タイトルを入力(空も可能)","");
 		this.HatenaSyntaxLine("link",url,title);
+	},
+	preview:function(){
+		var content=$(".contentTextarea").text();
+		$("#ShowPreview").html(content);
 	},
 	HatenaSyntaxLine:function(){
 		var val=$(".contentTextarea:first").val();

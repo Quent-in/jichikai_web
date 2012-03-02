@@ -25,9 +25,10 @@ class BlogList{
 			$filetext=file_get_contents($PG_DIR."/".$file);
 			$f=preg_split("/\n/",$filetext);
 			$text=$f[0];
-			$title=substr($text,1,-1);
+			$title=substr($text,1);
+			$title=strip_tags($title);
 			$filename=preg_replace("/(^_Blog__.*)\.txt/","$1",$file);
-			$this->listhtml.="<li><a href='?page=$filename'>$title</a></li>\n";
+			$this->listhtml.="<li><a href='?page=$filename'> $title </a></li>\n";
 			$this->listhtml.="<ul><li>Update ".date("Y/m/d",$dir[0])."</li></ul>";
 		}
 		$this->listhtml.="</ul>";

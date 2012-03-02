@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!doctype html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="ja">
 <head>
 	<!-- CSS based on template of Dandelion wiki engine by Radomir Dopieralski who released this
@@ -10,7 +10,7 @@
 	<link rel="stylesheet" href="src/style.css" type="text/css"/>
   {HEAD}
 </head>
-<body>
+<body lang="ja">
 <div id="wrapper">
 <h1 id="page-title"><a href="{HOME_URL}">{WIKI_TITLE}</a></h1>
 <div id="header">
@@ -37,8 +37,20 @@
 				<td colspan="3">{CONTENT_TEXTAREA}</td>
 			</tr>
 			<tr>
-				<td colspan="2"> {FORM_PASSWORD}{  FORM_PASSWORD_INPUT}{  CONTENT_SUBMIT}{  CONTENT_PREVIEW}</td>
+				<td colspan="2"> {FORM_PASSWORD}{  FORM_PASSWORD_INPUT}{  CONTENT_SUBMIT}<!--{  CONTENT_PREVIEW}--></td>
 				<td style="text-align: right; vertical-align: top;">{plugin:RESIZE_TEXTAREA}</td>
+			</tr>
+			<!--
+			<tr>
+				<td>画像アップロード<br />
+					<form id="ImgUpload">
+						<input type="file">
+					</div>
+				</td>
+			</tr>
+			-->
+			<tr>
+				<td><div id="ShowPreview"></div></td>
 			</tr>
 			<tr>
 				<td>{SYNTAX}</td>

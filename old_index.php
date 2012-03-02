@@ -1,11 +1,16 @@
 <?php // LionWiki 3.2.4, (c) Adam Zivner, licensed under GNU/GPL v2
-	//require("plugins/HatenaSyntax_for_php4.php");
-	require("plugins/original_HatenaSyntax.php");
-	require("plugins/BlogList.php");
 foreach($_REQUEST as $k => $v)
 	unset($$k); // register_globals = off
 
-$START_PAGE = 'MainPage'; // Which page should be default (start page)?
+// SETTINGS - default settings, can be overridden in config.php
+$WIKI_TITLE = 'My new wiki'; // name of the site
+$PASSWORD = ''; // SHA1 hash
+
+$TEMPLATE = 'templates/dandelion.html'; // presentation template
+$PROTECTED_READ = false; // if true, you need to fill password for reading pages too
+$NO_HTML = true; // XSS protection
+
+$START_PAGE = 'Main page'; // Which page should be default (start page)?
 $SYNTAX_PAGE = 'http://lionwiki.0o.cz/?page=Syntax+reference';
 
 $DATE_FORMAT = 'Y/m/d H:i';
@@ -19,7 +24,7 @@ umask(0);
 if(get_magic_quotes_gpc()) // magic_quotes_gpc can't be turned off
 	for($i = 0, $_SG = array(&$_GET, &$_POST, &$_COOKIE, &$_REQUEST), $c = count($_SG); $i < $c; ++$i)
 		$_SG[$i] = array_map('stripslashes', $_SG[$i]);
-//$self =$_SERVER['REQUEST_URI'];
+
 $self = basename($_SERVER['PHP_SELF']);
 $REAL_PATH = realpath(dirname(__FILE__)).'/';
 $VAR_DIR = 'var/';
@@ -30,10 +35,11 @@ $PLUGINS_DATA_DIR = $VAR_DIR.'plugins/';
 $LANG_DIR = 'lang/';
 
 @include('config.php'); // config file is not required, see settings above
+
 // default translation
-$T_HOME = 'MainPage';
-$T_SYNTAX = '記法について';
-$T_DONE = '保存する';
+$T_HOME = 'Main page';
+$T_SYNTAX = 'Syntax';
+$T_DONE = 'Save changes';
 $T_DISCARD_CHANGES = 'Discard changes';
 $T_PREVIEW = 'Preview';
 $T_SEARCH = 'Search';
@@ -46,13 +52,13 @@ $T_RESTORE = 'Restore';
 $T_REV_DIFF = '<b>Difference between revisions from {REVISION1} and {REVISION2}.</b>';
 $T_REVISION = "'''This revision is from {TIME}. You can {RESTORE} it.'''\n\n";
 $T_PASSWORD = 'Password';
-$T_EDIT = 'このページを編集する';
+$T_EDIT = 'Edit';
 $T_EDIT_SUMMARY = 'Summary of changes';
 $T_EDIT_CONFLICT = 'Edit conflict: somebody saved this page after you started editing. See last {DIFF} before saving your changes.';
 $T_SHOW_SOURCE = 'Show source';
 $T_SHOW_PAGE = 'Show page';
 $T_ERASE_COOKIE = 'Erase cookies';
-$T_MOVE_TEXT = 'ページ名';
+$T_MOVE_TEXT = 'New name';
 $T_DIFF = 'diff';
 $T_CREATE_PAGE = 'Create page';
 $T_PROTECTED_READ = 'You need to enter password to view content of site: ';
@@ -66,16 +72,15 @@ if($_GET['lang']) {
 else
 	list($LANG) = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
 
+if((@include("$LANG_DIR$LANG.php")) === false && (@include($LANG_DIR . substr($LANG, 0, 2) . '.php')) === false)
 	$LANG = 'en';
 
 // Creating essential directories if they don't exist
-/*
 if(!file_exists($VAR_DIR) && !mkdir(rtrim($VAR_DIR, "/")))
 	die("Can't create directory $VAR_DIR. Please create $VAR_DIR with 0777 rights.");
 else foreach(array($PG_DIR, $HIST_DIR, $PLUGINS_DATA_DIR) as $DIR)
 	if(@mkdir(rtrim($DIR, '/'), 0777)) {
 		$f = fopen($DIR . ".htaccess", "w"); fwrite($f, "deny from all"); fclose($f); }
-*/
 
 if($_GET['erasecookie']) // remove cookie without reloading
 	foreach($_COOKIE as $k => $v)
@@ -83,29 +88,17 @@ if($_GET['erasecookie']) // remove cookie without reloading
 			setcookie($k);
 			unset($_COOKIE[$k]);
 		}
+
 for($plugins = array(), $dir = @opendir($PLUGINS_DIR); $dir && $f = readdir($dir);) // load plugins
-	$f = readdir($dir);
 	if(preg_match('/wkp_(.+)\.php$/', $f, $m) > 0) {
-		//check plugin is off?
-		/*
-		foreach($Off_Plugins as $_pluginname){
-			if($_chkpluginoff || $f=="wkp_".$_pluginname.".php"){
-				$_chkpluginoff=true;
-				break;
-			}
-		}
-		if($_chkpluginoff){continue;}
-		*/
 		require $PLUGINS_DIR . $f;
-		$plugins[$m[1]] = new $$m[1]();
-		if(isset($$m[1])){
-			foreach($m[1] as $name => $value){
+		$plugins[$m[1]] = new $m[1]();
+
+		if(isset($$m[1]))
+			foreach($$m[1] as $name => $value)
 				$plugins[$m[1]]->$name = $value;
-			}
-		}
 	}
-	//echo"aa";
-//here is end of loading plugins
+
 plugin('pluginsLoaded');
 
 foreach(array('action', 'content', 'error', 'esum', 'f1', 'f2', 'last_changed', 'moveto', 'page', 'par', 'preview', 'query', 'restore', 'sc', 'showsource', 'time') as $req)
@@ -164,7 +157,7 @@ if($action == 'save' && !$preview && authentified()) { // do we have page to sav
 		if(!$file = @fopen("$PG_DIR$page.txt", 'w'))
 			die("Could not write page $PG_DIR$page.txt!");
 
-		fwrite($file,$content); fclose($file);
+		fwrite($file, $content); fclose($file);
 
 		// Backup old revision
 		@mkdir($HIST_DIR.$page, 0777); // Create directory if does not exist
@@ -206,11 +199,12 @@ if($action == 'save' && !$preview && authentified()) { // do we have page to sav
 	$error = $T_WRONG_PASSWORD;
 	$action = 'edit';
 }
+
 if($action == 'edit' || $preview) {
-	$CON_FORM_BEGIN = "<form action=\"$self\" method=\"post\" onsubmit=\"editor.submit(this);return false\"><input type=\"hidden\" name=\"action\" value=\"save\"/><input type=\"hidden\" name=\"last_changed\" value=\"$last_changed_ts\"/><input type=\"hidden\" name=\"showsource\" value=\"$showsource\"/><input type=\"hidden\" name=\"par\" value=\"".h($par)."\"/><input type=\"hidden\" name=\"page\" value=\"".h($page)."\"/>";
+	$CON_FORM_BEGIN = "<form action=\"$self\" method=\"post\"><input type=\"hidden\" name=\"action\" value=\"save\"/><input type=\"hidden\" name=\"last_changed\" value=\"$last_changed_ts\"/><input type=\"hidden\" name=\"showsource\" value=\"$showsource\"/><input type=\"hidden\" name=\"par\" value=\"".h($par)."\"/><input type=\"hidden\" name=\"page\" value=\"".h($page)."\"/>";
 	$CON_FORM_END = '</form>';
 	$CON_TEXTAREA = '<textarea class="contentTextarea" name="content" style="width:100%" cols="100" rows="30">'.h($CON).'</textarea>';
-	$CON_PREVIEW = '<input class="submit" type="button" name="preview" value="'.$T_PREVIEW.'" onClick="editor.preview()" "/>';
+	$CON_PREVIEW = '<input class="submit" type="submit" name="preview" value="'.$T_PREVIEW.'"/>';
 
 	if(!$showsource) {
 		$CON_SUBMIT = '<input class="submit" type="submit" value="'.$T_DONE.'"/>';
@@ -223,17 +217,8 @@ if($action == 'edit' || $preview) {
 		}
 
 		if(!$par) {
-			if(isset($_COOKIE['login_info'])){
-				if($_GET["blog"]==="true"|preg_match("/^_Blog__/",$_GET["page"])){
-					$RENAME_TEXT = "ブログ編集モード<br />";
-					$RENAME_INPUT = '<input type="hidden" name="moveto" value="'.h($page).'"/>';
-				}else{
-					$RENAME_TEXT = $T_MOVE_TEXT;
-					$RENAME_INPUT = '<input type="text" name="moveto" value="'.h($page).'"/>';
-				}
-			}else{
-				$RENAME_INPUT ="ログインしてください";
-			}
+			$RENAME_TEXT = $T_MOVE_TEXT;
+			$RENAME_INPUT = '<input type="text" name="moveto" value="'.h($page).'"/>';
 		}
 	}
 
@@ -280,7 +265,7 @@ if($action == 'edit' || $preview) {
 				$files[] = substr($f, 0, -4);
 
 	sort($files);
-	
+
 	foreach($files as $f)
 		$list .= "<li><a href=\"$self?page=".u($f).'&amp;redirect=no">'.h($f)."</a></li>";
 
@@ -336,7 +321,7 @@ if(!$action || $preview) { // page parsing
 
 	$CON = preg_replace("/(?<!\^)<!--.*-->/U", "", $CON); // internal comments
 	$CON = preg_replace("/\^(.)/e", "'&#'.ord('$1').';'", $CON);
-	//$CON = str_replace(array("<", "&"), array("&lt;", "&amp;"), $CON);
+	$CON = str_replace(array("<", "&"), array("&lt;", "&amp;"), $CON);
 	$CON = preg_replace("/&amp;([a-z]+;|\#[0-9]+;)/U", "&$1", $CON); // keep HTML entities
 	$CON = preg_replace("/(\r\n|\r)/", "\n", $CON); // unifying newlines to Unix ones
 
@@ -359,13 +344,9 @@ if(!$action || $preview) { // page parsing
 		$CON = str_replace($m[0], '<span'.($id ? " id=\"$id\"" : '').($class ? " class=\"$class\"" : '').($m[3] ? " style=\"$m[3]\"" : '').'>', $CON);
 	}
 
-	
-	
-	$hs=new HatenaSyntax(); //convert hatena syntax class
-	//$CON = str_replace('{/}', '</span>', $CON);
-	$CON=$hs->ConvertHatenaSyntax("$CON");
+	$CON = str_replace('{/}', '</span>', $CON);
+
 	plugin('formatBegin');
-/*
 
 	$CON = strtr($CON, array('&lt;-->' => '&harr;', '-->' => '&rarr;', '&lt;--' => '&larr;', "(c)" => '&copy;', "(r)" => '&reg;'));
 	$CON = preg_replace("/\{small\}(.*)\{\/small\}/U", "<small>$1</small>", $CON); // small
@@ -449,25 +430,19 @@ if(!$action || $preview) { // page parsing
 	$CON = preg_replace("/'''(.*)'''/Um", '<strong>$1</strong>', $CON); // bold
 	$CON = preg_replace("/''(.*)''/Um", '<em>$1</em>', $CON); // italic
 	$CON = str_replace('{br}', '<br style="clear:both"/>', $CON); // new line
-	*/
-	//$CON = preg_replace('/-----*/', '<hr/>', $CON); // horizontal line
-	/*
+	$CON = preg_replace('/-----*/', '<hr/>', $CON); // horizontal line
 	$CON = str_replace('--', '&mdash;', $CON); // --
 
 	$CON = preg_replace(array_fill(0, count($codes[1]) + 1, '/{CODE}/'), $codes[1], $CON, 1); // put HTML and "normal" codes back
 	$CON = preg_replace(array_fill(0, count($htmlcodes[1]) + 1, '/{HTML}/'), $htmlcodes[1], $CON, 1);
 
-	
-*/
+	plugin('formatEnd');
 }
 
-
-plugin('formatEnd');
 plugin('formatFinished');
+
 // Loading template. If does not exist, use built-in default
 $html = file_exists($TEMPLATE) ? file_get_contents(clear_path($TEMPLATE)) : fallback_template();
-
-
 
 // including pages in pure HTML
 while(preg_match('/{include:([^}]+)}/U', $html, $m)) {
@@ -475,27 +450,11 @@ while(preg_match('/{include:([^}]+)}/U', $html, $m)) {
 	$html = str_replace($m[0], $inc, $html);
 }
 
-plugin('template');
+plugin('template'); // plugin templating
 
 $html = preg_replace('/\{([^}]* )?plugin:.+( [^}]*)?\}/U', '', $html); // get rid of absent plugin tags
-$hs_ex=new HatenaSyntax();
-$bl=new BlogList();
-//this part is setting on Template Tag
+
 $tpl_subs = array(
-	
-	'HOME_URL' =>"?page=".u($START_PAGE),
-	'INFO_URL' =>'?page=infomation',
-	'MEMBER_URL' =>'?page=members',
-	'CONTACT_URL'=>'?page=contact_us',
-	'MAKE_NEW_ARTICLE'=>'<a href="?blog=true&page=_Blog__'.date("YmdHmi").'&action=edit">ブログ新規記事を作成する</a>',
-	'SYNTAX_EXPLAIN'=>$action == "edit" || $preview ?preg_replace("/\!--/","<br /><a href='#syntax_explain'>▲先頭に戻る</a><hr />",$hs_ex->ConvertHatenaSyntax(file_get_contents("syntax_explain.txt"))):"",
-	'TOOLBAR'=>isset($_COOKIE['login_info'])?
-		$action == "edit" || $preview ?file_get_contents("plugins/toolbar.html"):""
-		:"",
-	'BlogArticleList'=>$bl->BlogList(),
-	'EditInfo'=>isset($_COOKIE['login_info'])?"｜{MAKE_NEW_ARTICLE}｜{EDIT}｜":"{LOGIN}",
-	'LOGIN'=>'｜<form action="logincheck.php" method="post"><input name="backto" type="hidden" value="?page='.$page.'" /><label>ユーザー名 <input name="user" type="text" size="20" /></label>｜<label>パスワード <input type="password" name="pass" size="20" /></label>｜<input type="submit" size="15" value="ログイン" /></form>｜',
-	
 	'HEAD' => $HEAD . ($action ? '<meta name="robots" content="noindex, nofollow"/>' : ''),
 	'SEARCH_FORM' => '<form action="'.$self.'" method="get"><span><input type="hidden" name="action" value="search"/><input type="submit" style="display:none;"/>',
 	'\/SEARCH_FORM' => "</span></form>",
@@ -514,16 +473,14 @@ $tpl_subs = array(
 	'LAST_CHANGED' => $last_changed_ts ? date($DATE_FORMAT, $last_changed_ts + $LOCAL_HOUR * 3600) : "",
 	'CONTENT' => $action != "edit" ? $CON : "",
 	'TOC' => $TOC,
-	'SYNTAX' => isset($_COOKIE['login_info'])?
-		$action == "edit" || $preview ? "<a href='javascript:void(0);' onClick='Show_Syntax(this)'>▼記法について</a>" : ""
-		:"",
+	'SYNTAX' => $action == "edit" || $preview ? "<a href=\"$SYNTAX_PAGE\">$T_SYNTAX</a>" : "",
 	'SHOW_PAGE' => $action == "edit" || $preview ? "<a href=\"$self?page=".u($page)."\">$T_SHOW_PAGE</a>" : "",
 	'COOKIE' => '<a href="'.$self.'?page='.u($page).'&amp;action='.u($action).'&amp;erasecookie=1">'.$T_ERASE_COOKIE.'</a>',
-	'CONTENT_FORM' => isset($_COOKIE['login_info'])?$CON_FORM_BEGIN:"",
-	'\/CONTENT_FORM' => isset($_COOKIE['login_info'])?$CON_FORM_END:"",
-	'CONTENT_TEXTAREA' => isset($_COOKIE['login_info'])?$CON_TEXTAREA:"",
-	'CONTENT_SUBMIT' => isset($_COOKIE['login_info'])?$CON_SUBMIT:"",
-	'CONTENT_PREVIEW' => isset($_COOKIE['login_info'])?$CON_PREVIEW:"",
+	'CONTENT_FORM' => $CON_FORM_BEGIN,
+	'\/CONTENT_FORM' => $CON_FORM_END,
+	'CONTENT_TEXTAREA' => $CON_TEXTAREA,
+	'CONTENT_SUBMIT' => $CON_SUBMIT,
+	'CONTENT_PREVIEW' => $CON_PREVIEW,
 	'RENAME_TEXT' => $RENAME_TEXT,
 	'RENAME_INPUT' => $RENAME_INPUT,
 	'EDIT_SUMMARY_TEXT' => $EDIT_SUMMARY_TEXT,
@@ -534,8 +491,7 @@ $tpl_subs = array(
 
 foreach($tpl_subs as $tpl => $rpl) // substituting values
 	$html = template_replace($tpl, $rpl, $html);
-foreach($tpl_subs as $tpl => $rpl) // substituting values
-	$html = template_replace($tpl, $rpl, $html);
+
 header('Content-type: text/html; charset=UTF-8');
 die($html);
 
@@ -660,5 +616,70 @@ function plugin($method) {
 
 	foreach($GLOBALS['plugins'] as $idx => $plugin)
 		$ret |= method_exists($GLOBALS['plugins'][$idx], $method) && call_user_func_array(array(&$GLOBALS['plugins'][$idx], $method), $args);
+
 	return $ret; // returns true if treated by a plugin
 }
+
+function fallback_template() { return '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+	<title>{PAGE_TITLE_HEAD  - }{WIKI_TITLE}</title>
+	<style type="text/css">
+*{margin:0;padding:0}
+body{font-size:12px;line-height:16px;padding:10px 20px 20px 20px}
+p{margin:5px}
+a{color:#060;text-decoration:none;border-bottom:1px dotted #060}
+a.pending{color:#900}
+a.external:after{content:"\2197"}
+pre{border:1px dotted #ccc;padding:4px;overflow:auto;margin:3px}
+img,a img{border:0}
+h1,h2,h3,h4,h5,h6{letter-spacing:2px;font-weight:normal;margin:15px 0 15px 0;color:#060}
+h1 a:hover,h2 a:hover,h3 a:hover,h4 a:hover,h5 a:hover,h6 a:hover{color:#060}
+h1 a{border-bottom:0}
+h2 .par-edit,h3 .par-edit,h4 .par-edit,h5 .par-edit,h6 .par-edit{visibility:hidden;font-size:x-small}
+h2:hover .par-edit,h3:hover .par-edit,h4:hover .par-edit,h5:hover .par-edit,h6:hover .par-edit{visibility:visible}
+hr{margin:10px 0 10px 0;height:1px;overflow:hidden;border:0;background:#060}
+ul,ol{padding:5px 0px 5px 20px}
+table{text-align:left}
+input,select,textarea{border:1px solid #AAA;padding:2px;font-size:12px}
+#toc{border:1px dashed #060;margin:5px 0 5px 10px;padding:6px 5px 7px 0;float:right;padding-right:2em;list-style:none}
+#toc ul{list-style:none;padding:3px 0 3px 10px}
+#toc li{font-size:11px;padding-left:10px}
+#diff{padding:1em;white-space:pre-wrap;width:97%}
+#diff ins{color:green;font-weight:bold}
+#diff del{color:red;text-decoration:line-through}
+#diff .orig{color:#666;font-size:90%}
+/* Plugins */
+.tagList{padding:0.2em 0.4em 0.2em 0.4em;margin-top:0.5em;border:1px dashed #060;clear:right}
+.tagCloud{float:right;width:200px;padding:0.5em;margin:1em;border:1px dashed #060;clear:right}
+.pageVersionsList{letter-spacing:0;font-variant:normal;font-size:12px}
+.resizeTextarea a{border-bottom:none}
+	</style>
+	{HEAD}
+</head>
+<body>
+<table width="100%" cellpadding="4">
+<tr>
+	<td colspan="2">{HOME} {RECENT_CHANGES}</td>
+	<td style="text-align:right">{EDIT} {SYNTAX} {HISTORY}</td>
+</tr>
+<tr><th colspan="3"><hr/><h1 id="page-title">{PAGE_TITLE} {<span class="pageVersionsList">( plugin:VERSIONS_LIST )</span>}</h1></th></tr>
+<tr>
+	<td colspan="3">
+		{<div style="color:#F25A5A;font-weight:bold;"> ERROR </div>}
+		{CONTENT} {plugin:TAG_LIST}
+		{CONTENT_FORM} {RENAME_TEXT} {RENAME_INPUT <br/><br/>} {CONTENT_TEXTAREA}
+		<p style="float:right;margin:6px">{FORM_PASSWORD} {FORM_PASSWORD_INPUT} {plugin:CAPTCHA_QUESTION} {plugin:CAPTCHA_INPUT}
+		{EDIT_SUMMARY_TEXT} {EDIT_SUMMARY_INPUT} {CONTENT_SUBMIT} {CONTENT_PREVIEW}</p>{/CONTENT_FORM}
+	</td>
+</tr>
+<tr><td colspan="3"><hr/></td></tr>
+<tr>
+	<td><div>{SEARCH_FORM}{SEARCH_INPUT}{SEARCH_SUBMIT}{/SEARCH_FORM}</div></td>
+	<td>Powered by <a href="http://lionwiki.0o.cz/">LionWiki</a>. {LAST_CHANGED_TEXT}: {LAST_CHANGED} {COOKIE}</td>
+	<td style="text-align:right">{EDIT} {SYNTAX} {HISTORY}</td>
+</tr>
+</table>
+</body>
+</html>'; }
