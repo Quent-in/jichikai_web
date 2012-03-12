@@ -85,7 +85,7 @@ class HatenaSyntax{
 					$inlinehtml=$title?"<a href='$url' target='_blank'>$title</a>":"<a href='$url' target='_blank'>$url</a>";
 					break;
 				case"image":
-					$inlinehtml="<img src='/img/".$keys[1]."'>";
+					$inlinehtml="<img src='img/".$keys[1]."'>";
 					break;
 				default:
 					$wasundefined=true;

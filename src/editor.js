@@ -23,6 +23,16 @@ var editor={
 			return false;
 		}
 	},
+	image:function(){
+		window.open(
+			"imageupload.html","uploadWindow",
+			menubar="no",toolbar="no"
+		);
+	},
+	insertImgPath:function(){
+		var imgPath=document.getElementById("uploadFileName").value;
+		this.HatenaSyntaxLine("image",imgPath);
+	},
 	link:function(){
 		var url=prompt("URLを貼りつけてください","");
 		if(!url){
