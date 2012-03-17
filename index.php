@@ -11,6 +11,8 @@ $SYNTAX_PAGE = 'http://lionwiki.0o.cz/?page=Syntax+reference';
 $DATE_FORMAT = 'Y/m/d H:i';
 $LOCAL_HOUR = 0;
 
+$bl=new BlogList();
+
 @error_reporting(E_ERROR | E_WARNING | E_PARSE);
 @ini_set('default_charset', 'UTF-8');
 set_magic_quotes_runtime(0);
@@ -24,13 +26,16 @@ $self = basename($_SERVER['PHP_SELF']);
 $REAL_PATH = realpath(dirname(__FILE__)).'/';
 $VAR_DIR = 'var/';
 $PG_DIR = $VAR_DIR.'pages/';
-$HIST_DIR = $VAR_DIR.'history/';
+$HIST_DIR = $VAR_DIR.'history';
 $PLUGINS_DIR = 'plugins/';
 $PLUGINS_DATA_DIR = $VAR_DIR.'plugins/';
 $LANG_DIR = 'lang/';
 
 @include('config.php'); // config file is not required, see settings above
 // default translation
+
+$ARCON=$bl->BlogList(null,true);
+
 $T_HOME = 'MainPage';
 $T_SYNTAX = '記法について';
 $T_DONE = '保存する';
@@ -165,9 +170,9 @@ if($action == 'save' && !$preview && authentified()) { // do we have page to sav
 			die("Could not write page $PG_DIR$page.txt!");
 
 		fwrite($file,$content); fclose($file);
-
+/**
 		// Backup old revision
-		@mkdir($HIST_DIR.$page, 0777); // Create directory if does not exist
+ 		@mkdir($HIST_DIR.$page, 0777); // Create directory if does not exist
 
 		$rightnow = date('Ymd-Hi-s', time() + $LOCAL_HOUR * 3600);
 
@@ -195,7 +200,7 @@ if($action == 'save' && !$preview && authentified()) { // do we have page to sav
 				die('Unknown error2! Page was not moved.');
 			} else
 				$page = $moveto;
-
+**/
 		if(!plugin('pageWritten'))
 			die(header("Location:$self?page=" . u($page) . '&redirect=no' . ($par ? "&par=$par" : '') . ($_REQUEST['ajax'] ? '&ajax=1' : '')));
 		else
@@ -206,6 +211,8 @@ if($action == 'save' && !$preview && authentified()) { // do we have page to sav
 	$error = $T_WRONG_PASSWORD;
 	$action = 'edit';
 }
+
+
 if($action == 'edit' || $preview) {
 	$CON_FORM_BEGIN = "<form action=\"$self\" method=\"post\" onsubmit=\"editor.submit(this);return false\"><input type=\"hidden\" name=\"action\" value=\"save\"/><input type=\"hidden\" name=\"last_changed\" value=\"$last_changed_ts\"/><input type=\"hidden\" name=\"showsource\" value=\"$showsource\"/><input type=\"hidden\" name=\"par\" value=\"".h($par)."\"/><input type=\"hidden\" name=\"page\" value=\"".h($page)."\"/>";
 	$CON_FORM_END = '</form>';
@@ -479,20 +486,20 @@ plugin('template');
 
 $html = preg_replace('/\{([^}]* )?plugin:.+( [^}]*)?\}/U', '', $html); // get rid of absent plugin tags
 $hs_ex=new HatenaSyntax();
-$bl=new BlogList();
 //this part is setting on Template Tag
 $tpl_subs = array(
 	
-	'HOME_URL' =>"?page=".u($START_PAGE),
+	'HOME_URL' =>'?page=MainPage',
 	'INFO_URL' =>'?page=infomation',
 	'MEMBER_URL' =>'?page=members',
+	'ARCHIVES_URL'=>'?page=MainPage&Archives=1',
 	'CONTACT_URL'=>'?page=contact_us',
 	'MAKE_NEW_ARTICLE'=>'<a href="?blog=true&page=_Blog__'.date("YmdHmi").'&action=edit">ブログ新規記事を作成する</a>',
 	'SYNTAX_EXPLAIN'=>$action == "edit" || $preview ?preg_replace("/\!--/","<br /><a href='#syntax_explain'>▲先頭に戻る</a><hr />",$hs_ex->ConvertHatenaSyntax(file_get_contents("syntax_explain.txt"))):"",
 	'TOOLBAR'=>isset($_COOKIE['login_info'])?
 		$action == "edit" || $preview ?file_get_contents("plugins/toolbar.html"):""
 		:"",
-	'BlogArticleList'=>$bl->BlogList(),
+	'BlogArticleList'=>$bl->BlogList(5),
 	'EditInfo'=>isset($_COOKIE['login_info'])?"｜{MAKE_NEW_ARTICLE}｜{EDIT}｜":"{LOGIN}",
 	'LOGIN'=>'｜<form action="logincheck.php" method="post"><input name="backto" type="hidden" value="?page='.$page.'" /><label>ユーザー名 <input name="user" type="text" size="20" /></label>｜<label>パスワード <input type="password" name="pass" size="20" /></label>｜<input type="submit" size="15" value="ログイン" /></form>｜',
 	
@@ -512,7 +519,7 @@ $tpl_subs = array(
 	'WIKI_TITLE' => h($WIKI_TITLE),
 	'LAST_CHANGED_TEXT' => $last_changed_ts ? $T_LAST_CHANGED : "",
 	'LAST_CHANGED' => $last_changed_ts ? date($DATE_FORMAT, $last_changed_ts + $LOCAL_HOUR * 3600) : "",
-	'CONTENT' => $action != "edit" ? $CON : "",
+	'CONTENT' => $action != "edit" ? $CON : $_GET['Archives'] ? $ARCON :"",
 	'TOC' => $TOC,
 	'SYNTAX' => isset($_COOKIE['login_info'])?
 		$action == "edit" || $preview ? "<a href='javascript:void(0);' onClick='Show_Syntax(this)'>▼記法について</a>" : ""

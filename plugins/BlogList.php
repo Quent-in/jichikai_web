@@ -1,13 +1,14 @@
 <?php
 class BlogList{
 	var $listhtml="";
-	function BlogList(){
+	function BlogList($num,$arcv){
 		global $PG_DIR;
 		if($_GET["action"]==="edit"){
 			return "";
 		}
 		$dir = opendir($PG_DIR);
-		$this->listhtml="新着記事一覧<br />";
+
+		$this->listhtml=$arcv ? "<h2>ブログ記事一覧</h2>" : "新着記事一覧<br />";
 		$this->listhtml.="<ul>";
 		for($i=0;$file = readdir($dir);){
 			if(!preg_match("/^_Blog__/",$file)){
@@ -18,7 +19,8 @@ class BlogList{
 			$i++;
 		}
 		rsort($dirinfo);
-		for($i=0;$i<5&&$dirinfo[$i];$i++){
+		$num = $num ? $num : $i ; 
+		for($i=0;$i<$num&&$dirinfo[$i];$i++){
 			$dir=$dirinfo[$i];
 			$file=$dir[1];
 			if(!preg_match("/^_Blog__/",$file)){continue;};
