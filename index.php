@@ -63,6 +63,13 @@ $T_CREATE_PAGE = 'Create page';
 $T_PROTECTED_READ = 'You need to enter password to view content of site: ';
 $T_WRONG_PASSWORD = 'Password is incorrect.';
 
+$filetext=file_get_contents($PG_DIR."/".$_GET["page"].".txt");
+$filecon=preg_split("/\n/",$filetext);
+$text=$filecon[0];
+$blogTitle=substr($text,1);
+$blogTitle=strip_tags($blogTitle);
+	
+
 if($_GET['lang']) {
 	$LANG = clear_path($_GET['lang']);
 	setcookie('LW_LANG', $LANG, time() + 365 * 86400);
@@ -264,23 +271,8 @@ if($action == 'edit' || $preview) {
 	}
 
 	$CON .= '</form>';
-} elseif($action == 'diff') {
-	if(!$f1 && $dir = @opendir("$HIST_DIR$page/")) { // diff is made on two last revisions
-		while($f = @readdir($dir))
-			if(substr($f, -4) == '.bak')
-				$files[] = $f;
-
-		rsort($files);
-
-		die(header("Location:$self?action=diff&page=".u($page)."&f1=$files[0]&f2=$files[1]"));
-	}
-
-	$r1 = "<a href=\"$self?page=".u($page)."&amp;action=rev&amp;f1=$f1\">".rev_time($f1)."</a>";
-	$r2 = "<a href=\"$self?page=".u($page)."&amp;action=rev&amp;f1=$f2\">".rev_time($f2)."</a>";
-
-	$CON = str_replace(array("{REVISION1}", "{REVISION2}"), array($r1, $r2), $T_REV_DIFF);
-	$CON .= diff($f1, $f2);
-} elseif($action == 'search') {
+} 
+elseif($action == 'search') {
 	for($files = array(), $dir = opendir($PG_DIR); $f = readdir($dir);)
 		if(substr($f, -4) == '.txt' && ($c = @file_get_contents($PG_DIR . $f)))
 			if(!$query || stristr($f . $c, $query) !== false)
@@ -513,13 +505,13 @@ $tpl_subs = array(
 	'ERROR' => $error,
 	'HISTORY' => $page ? "<a href=\"$self?page=".u($page)."&amp;action=history\">$T_HISTORY</a>" : "",
 	'PAGE_TITLE' => h($page == $START_PAGE && $page == $TITLE ? $WIKI_TITLE : $TITLE),
-	'PAGE_TITLE_HEAD' => h($TITLE),
+	'PAGE_TITLE_HEAD' => preg_match("/_Blog__/",$_GET["page"]) ? $blogTitle : $_GET["Archives"] ? "Archives" : h($TITLE),
 	'PAGE_URL' => u($page),
 	'EDIT' => !$action ? ("<a href=\"$self?page=".u($page)."&amp;action=edit".(is_writable("$PG_DIR$page.txt") ? "\">$T_EDIT</a>" : "&amp;showsource=1\">$T_SHOW_SOURCE</a>")) : "",
 	'WIKI_TITLE' => h($WIKI_TITLE),
 	'LAST_CHANGED_TEXT' => $last_changed_ts ? $T_LAST_CHANGED : "",
 	'LAST_CHANGED' => $last_changed_ts ? date($DATE_FORMAT, $last_changed_ts + $LOCAL_HOUR * 3600) : "",
-	'CONTENT' => $action != "edit" ? $CON : $_GET['Archives'] ? $ARCON :"",
+	'CONTENT' => $action != "edit" ? $_GET['Archives'] ? $ARCON : $CON : "",
 	'TOC' => $TOC,
 	'SYNTAX' => isset($_COOKIE['login_info'])?
 		$action == "edit" || $preview ? "<a href='javascript:void(0);' onClick='Show_Syntax(this)'>▼記法について</a>" : ""
