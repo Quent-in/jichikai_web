@@ -68,7 +68,6 @@ $filecon=preg_split("/\n/",$filetext);
 $text=$filecon[0];
 $blogTitle=substr($text,1);
 $blogTitle=strip_tags($blogTitle);
-	
 
 if($_GET['lang']) {
 	$LANG = clear_path($_GET['lang']);
@@ -504,14 +503,14 @@ $tpl_subs = array(
 	'RECENT_CHANGES' => "<a href=\"$self?action=recent\">$T_RECENT_CHANGES</a>",
 	'ERROR' => $error,
 	'HISTORY' => $page ? "<a href=\"$self?page=".u($page)."&amp;action=history\">$T_HISTORY</a>" : "",
-	'PAGE_TITLE' => h($page == $START_PAGE && $page == $TITLE ? $WIKI_TITLE : $TITLE),
-	'PAGE_TITLE_HEAD' => preg_match("/_Blog__/",$_GET["page"]) ? $blogTitle : $_GET["Archives"] ? "Archives" : h($TITLE),
+	//'PAGE_TITLE' => h($page == $START_PAGE && $page == $TITLE ? $WIKI_TITLE : $TITLE),
+	'PAGE_TITLE_HEAD' => preg_match("/_Blog__/",$page) ? $blogTitle : ($_GET["Archives"] ? "Archives" : h($TITLE) ),
 	'PAGE_URL' => u($page),
 	'EDIT' => !$action ? ("<a href=\"$self?page=".u($page)."&amp;action=edit".(is_writable("$PG_DIR$page.txt") ? "\">$T_EDIT</a>" : "&amp;showsource=1\">$T_SHOW_SOURCE</a>")) : "",
 	'WIKI_TITLE' => h($WIKI_TITLE),
 	'LAST_CHANGED_TEXT' => $last_changed_ts ? $T_LAST_CHANGED : "",
 	'LAST_CHANGED' => $last_changed_ts ? date($DATE_FORMAT, $last_changed_ts + $LOCAL_HOUR * 3600) : "",
-	'CONTENT' => $action != "edit" ? $_GET['Archives'] ? $ARCON : $CON : "",
+	'CONTENT' => $action != "edit" ? $_GET["Archives"] ? $ARCON : $CON : "",
 	'TOC' => $TOC,
 	'SYNTAX' => isset($_COOKIE['login_info'])?
 		$action == "edit" || $preview ? "<a href='javascript:void(0);' onClick='Show_Syntax(this)'>▼記法について</a>" : ""

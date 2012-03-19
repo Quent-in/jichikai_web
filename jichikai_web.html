@@ -6,7 +6,7 @@
 	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
 	<script type="text/javascript" src="src/jquery-1.4.3.min.js"></script>
 	<script type="text/javascript" src="src/editor.js"></script>
-	<title>{PAGE_TITLE_HEAD  - }{WIKI_TITLE}</title>
+	<title>{PAGE_TITLE_HEAD} - {WIKI_TITLE}</title>
 	<link rel="stylesheet" href="src/style.css" type="text/css"/>
   {HEAD}
 </head>
@@ -15,9 +15,9 @@
 <h1 id="page-title"><a href="{HOME_URL}">{WIKI_TITLE}</a></h1>
 <div id="header">
 	<ul id="pages">
-		<li><a href="{HOME_URL}">Home</a></li>
+		<li><a href="{HOME_URL}">Main Page</a></li>
 		<li><a href="{ARCHIVES_URL}">Archives</a></li>
-		<li><a href="{MEMBER_URL}">Members</a></li>
+		<li><a href="{MEMBER_URL}">Member</a></li>
 		<li><a href="{INFO_URL}">Infomations</a></li>
 		<li><a href="{CONTACT_URL}">Contact us</a></li>
 	</ul>
@@ -42,15 +42,6 @@
 				<td colspan="2"> {FORM_PASSWORD}{  FORM_PASSWORD_INPUT}{  CONTENT_SUBMIT}<!--{  CONTENT_PREVIEW}--></td>
 				<td style="text-align: right; vertical-align: top;">{plugin:RESIZE_TEXTAREA}</td>
 			</tr>
-			<!--
-			<tr>
-				<td>画像アップロード<br />
-					<form id="ImgUpload">
-						<input type="file">
-					</div>
-				</td>
-			</tr>
-			-->
 			<tr>
 				<td><div id="ShowPreview"></div></td>
 			</tr>
