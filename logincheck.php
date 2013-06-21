@@ -1,7 +1,8 @@
 <?php
+	session_start();
 	require("config.php");
 	if($_POST["user"]==$user && $_POST["pass"]==$pass){
-		setcookie("login_info",true,time()*60*60*24);	
+		$_SESSION['jichikaiLogin'] = true;
 		header("location:./".$_POST["backto"]);
 	}
 	else{

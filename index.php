@@ -1,7 +1,9 @@
 <?php // LionWiki 3.2.4, (c) Adam Zivner, licensed under GNU/GPL v2
 	//require("plugins/HatenaSyntax_for_php4.php");
+	session_start();
 	require("plugins/original_HatenaSyntax.php");
 	require("plugins/BlogList.php");
+	print_r($_SESSION);
 foreach($_REQUEST as $k => $v)
 	unset($$k); // register_globals = off
 
@@ -236,7 +238,7 @@ if($action == 'edit' || $preview) {
 		}
 
 		if(!$par) {
-			if(isset($_COOKIE['login_info'])){
+			if(isset($_SESSION['jichikaiLogin'])){
 				if($_GET["blog"]==="true"|preg_match("/^_Blog__/",$_GET["page"])){
 					$RENAME_TEXT = "ブログ編集モード<br />";
 					$RENAME_INPUT = '<input type="hidden" name="moveto" value="'.h($page).'"/>';
@@ -487,11 +489,11 @@ $tpl_subs = array(
 	'CONTACT_URL'=>'?page=contact_us',
 	'MAKE_NEW_ARTICLE'=>'<a href="?blog=true&page=_Blog__'.date("YmdHmi").'&action=edit">ブログ新規記事を作成する</a>',
 	'SYNTAX_EXPLAIN'=>$action == "edit" || $preview ?preg_replace("/\!--/","<br /><a href='#syntax_explain'>▲先頭に戻る</a><hr />",$hs_ex->ConvertHatenaSyntax(file_get_contents("syntax_explain.txt"))):"",
-	'TOOLBAR'=>isset($_COOKIE['login_info'])?
+	'TOOLBAR'=>isset($_SESSION['jichikaiLogin'])?
 		$action == "edit" || $preview ?file_get_contents("plugins/toolbar.html"):""
 		:"",
 	'BlogArticleList'=>$bl->BlogList(5),
-	'EditInfo'=>isset($_COOKIE['login_info'])?"｜{MAKE_NEW_ARTICLE}｜{EDIT}｜":"{LOGIN}",
+	'EditInfo'=>isset($_SESSION['jichikaiLogin'])?"｜{MAKE_NEW_ARTICLE}｜{EDIT}｜":"{LOGIN}",
 	'LOGIN'=>'｜<form action="logincheck.php" method="post"><input name="backto" type="hidden" value="?page='.$page.'" /><label>ユーザー名 <input name="user" type="text" size="20" /></label>｜<label>パスワード <input type="password" name="pass" size="20" /></label>｜<input type="submit" size="15" value="ログイン" /></form>｜',
 	
 	'HEAD' => $HEAD . ($action ? '<meta name="robots" content="noindex, nofollow"/>' : ''),
@@ -512,16 +514,16 @@ $tpl_subs = array(
 	'LAST_CHANGED' => $last_changed_ts ? date($DATE_FORMAT, $last_changed_ts + $LOCAL_HOUR * 3600) : "",
 	'CONTENT' => $action != "edit" ? $_GET["Archives"] ? $ARCON : $CON : "",
 	'TOC' => $TOC,
-	'SYNTAX' => isset($_COOKIE['login_info'])?
+	'SYNTAX' => isset($_SESSION['jichikaiLogin'])?
 		$action == "edit" || $preview ? "<a href='javascript:void(0);' onClick='Show_Syntax(this)'>▼記法について</a>" : ""
 		:"",
 	'SHOW_PAGE' => $action == "edit" || $preview ? "<a href=\"$self?page=".u($page)."\">$T_SHOW_PAGE</a>" : "",
 	'COOKIE' => '<a href="'.$self.'?page='.u($page).'&amp;action='.u($action).'&amp;erasecookie=1">'.$T_ERASE_COOKIE.'</a>',
-	'CONTENT_FORM' => isset($_COOKIE['login_info'])?$CON_FORM_BEGIN:"",
-	'\/CONTENT_FORM' => isset($_COOKIE['login_info'])?$CON_FORM_END:"",
-	'CONTENT_TEXTAREA' => isset($_COOKIE['login_info'])?$CON_TEXTAREA:"",
-	'CONTENT_SUBMIT' => isset($_COOKIE['login_info'])?$CON_SUBMIT:"",
-	'CONTENT_PREVIEW' => isset($_COOKIE['login_info'])?$CON_PREVIEW:"",
+	'CONTENT_FORM' => isset($_SESSION['jichikaiLogin'])?$CON_FORM_BEGIN:"",
+	'\/CONTENT_FORM' => isset($_SESSION['jichikaiLogin'])?$CON_FORM_END:"",
+	'CONTENT_TEXTAREA' => isset($_SESSION['jichikaiLogin'])?$CON_TEXTAREA:"",
+	'CONTENT_SUBMIT' => isset($_SESSION['jichikaiLogin'])?$CON_SUBMIT:"",
+	'CONTENT_PREVIEW' => isset($_SESSION['jichikaiLogin'])?$CON_PREVIEW:"",
 	'RENAME_TEXT' => $RENAME_TEXT,
 	'RENAME_INPUT' => $RENAME_INPUT,
 	'EDIT_SUMMARY_TEXT' => $EDIT_SUMMARY_TEXT,
